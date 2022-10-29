@@ -1,0 +1,331 @@
+```{r}
+library(tidyverse)
+library(jsonlite)
+library(mapdeck)
+library(sf)
+```
+
+```{r}
+mapbox <- read_json("../data/mapbox.json")
+set_token(mapbox$token)
+```
+
+```{r}
+hop_teaming_provider_to_facility <- read_csv("../data/hop_teaming_provider_to_facility.csv", show_col_types = F)
+hop_teaming_facility_to_provider <- read_csv("../data/hop_teaming_facility_to_provider.csv", show_col_types = F)
+```
+
+```{r}
+orthopaedic_surgery <- hop_teaming_provider_to_facility %>% 
+  filter(affiliation_to %in% c("VANDERBILT", "HCA", "SAINT THOMAS ASCENSION", "LIFEPOINT", "CHS"),
+         classification_from == "Orthopaedic Surgery") %>%
+  mutate(hex_to = case_when(affiliation_to == "VANDERBILT" ~ "#9a783d97",
+                            affiliation_to == "HCA" ~ "#e2592997",
+                            affiliation_to == "SAINT THOMAS ASCENSION" ~ "#1c429797",
+                            affiliation_to == "LIFEPOINT" ~ "#5f606297",
+                            affiliation_to == "CHS" ~ "#006c6797"),
+         r_to = case_when(affiliation_to == "VANDERBILT" ~ 154,
+                          affiliation_to == "HCA" ~ 226,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 28,
+                          affiliation_to == "LIFEPOINT" ~ 95,
+                          affiliation_to == "CHS" ~ 0),
+         g_to = case_when(affiliation_to == "VANDERBILT" ~ 120,
+                          affiliation_to == "HCA" ~ 89,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 66,
+                          affiliation_to == "LIFEPOINT" ~ 96,
+                          affiliation_to == "CHS" ~ 108),
+         b_to = case_when(affiliation_to == "VANDERBILT" ~ 61,
+                          affiliation_to == "HCA" ~ 41,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 151,
+                          affiliation_to == "LIFEPOINT" ~ 98,
+                          affiliation_to == "CHS" ~ 103)) %>%
+  group_by(lat_from, lng_from, hex_to, r_to, g_to, b_to, affiliation_to) %>%
+  summarize(patient_count = sum(patient_count), .groups = "drop") %>%
+  write_csv("../data/referrals_from_orthopaedic_surgery.csv")
+```
+
+```{r}
+legend <- legend_element(
+  variables = c("Vanderbilt", "HCA", "Ascension Saint Thomas", "Lifepoint", "CHS"),
+  colours = c("#9a783d97", "#e2592997", "#1c429797", "#5f606297", "#006c6797"),
+  colour_type = "fill",
+  variable_type = "category"
+)
+
+mapdeck(style = mapdeck_style("light"), pitch = 60, bearing = 16) %>%
+  add_column(
+    data = orthopaedic_surgery,
+    lat = "lat_from",
+    lon = "lng_from",
+    fill_colour = "hex_to",
+    elevation = "patient_count",
+    elevation_scale = 3,
+    disk_resolution = 300,
+    radius = 550,
+    legend = mapdeck_legend(legend)
+)
+```
+
+```{r}
+noninternal_medicine <- hop_teaming_provider_to_facility %>% 
+  filter(affiliation_to %in% c("VANDERBILT", "HCA", "SAINT THOMAS ASCENSION", "LIFEPOINT", "CHS"),
+         classification_from != "Internal Medicine") %>%
+  mutate(hex_to = case_when(affiliation_to == "VANDERBILT" ~ "#9a783d97",
+                            affiliation_to == "HCA" ~ "#e2592997",
+                            affiliation_to == "SAINT THOMAS ASCENSION" ~ "#1c429797",
+                            affiliation_to == "LIFEPOINT" ~ "#5f606297",
+                            affiliation_to == "CHS" ~ "#006c6797"),
+         r_to = case_when(affiliation_to == "VANDERBILT" ~ 154,
+                          affiliation_to == "HCA" ~ 226,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 28,
+                          affiliation_to == "LIFEPOINT" ~ 95,
+                          affiliation_to == "CHS" ~ 0),
+         g_to = case_when(affiliation_to == "VANDERBILT" ~ 120,
+                          affiliation_to == "HCA" ~ 89,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 66,
+                          affiliation_to == "LIFEPOINT" ~ 96,
+                          affiliation_to == "CHS" ~ 108),
+         b_to = case_when(affiliation_to == "VANDERBILT" ~ 61,
+                          affiliation_to == "HCA" ~ 41,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 151,
+                          affiliation_to == "LIFEPOINT" ~ 98,
+                          affiliation_to == "CHS" ~ 103)) %>%
+  group_by(lat_from, lng_from, hex_to, r_to, g_to, b_to, affiliation_to) %>%
+  summarize(patient_count = sum(patient_count), .groups = "drop") %>%
+  write_csv("../data/referrals_from_noninternal_medicine.csv")
+```
+
+```{r}
+internal_medicine <- hop_teaming_provider_to_facility %>% 
+  filter(affiliation_to %in% c("VANDERBILT", "HCA", "SAINT THOMAS ASCENSION", "LIFEPOINT", "CHS"),
+         classification_from == "Internal Medicine") %>%
+  mutate(hex_to = case_when(affiliation_to == "VANDERBILT" ~ "#9a783d97",
+                            affiliation_to == "HCA" ~ "#e2592997",
+                            affiliation_to == "SAINT THOMAS ASCENSION" ~ "#1c429797",
+                            affiliation_to == "LIFEPOINT" ~ "#5f606297",
+                            affiliation_to == "CHS" ~ "#006c6797"),
+         r_to = case_when(affiliation_to == "VANDERBILT" ~ 154,
+                          affiliation_to == "HCA" ~ 226,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 28,
+                          affiliation_to == "LIFEPOINT" ~ 95,
+                          affiliation_to == "CHS" ~ 0),
+         g_to = case_when(affiliation_to == "VANDERBILT" ~ 120,
+                          affiliation_to == "HCA" ~ 89,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 66,
+                          affiliation_to == "LIFEPOINT" ~ 96,
+                          affiliation_to == "CHS" ~ 108),
+         b_to = case_when(affiliation_to == "VANDERBILT" ~ 61,
+                          affiliation_to == "HCA" ~ 41,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 151,
+                          affiliation_to == "LIFEPOINT" ~ 98,
+                          affiliation_to == "CHS" ~ 103)) %>%
+  group_by(lat_from, lng_from, hex_to, r_to, g_to, b_to, affiliation_to) %>%
+  summarize(patient_count = sum(patient_count), .groups = "drop") %>%
+  write_csv("../data/referrals_from_internal_medicine.csv")
+```
+
+```{r}
+legend <- legend_element(
+  variables = c("Vanderbilt", "HCA", "Ascension Saint Thomas", "Lifepoint", "CHS"),
+  colours = c("#9a783d97", "#e2592997", "#1c429797", "#5f606297", "#006c6797"),
+  colour_type = "fill",
+  variable_type = "category"
+)
+
+mapdeck(style = mapdeck_style("light"), pitch = 60, bearing = 16) %>%
+  add_column(
+    data = internal_medicine,
+    lat = "lat_from",
+    lon = "lng_from",
+    fill_colour = "hex_to",
+    elevation = "patient_count",
+    elevation_scale = 0.15,
+    disk_resolution = 300,
+    radius = 550,
+    legend = mapdeck_legend(legend)
+  )
+```
+
+```{r}
+family_medicine <- hop_teaming_provider_to_facility %>% 
+  filter(affiliation_to %in% c("VANDERBILT", "HCA", "SAINT THOMAS ASCENSION", "LIFEPOINT", "CHS"),
+         classification_from == "Family Medicine") %>%
+  mutate(hex_to = case_when(affiliation_to == "VANDERBILT" ~ "#9a783d97",
+                            affiliation_to == "HCA" ~ "#e2592997",
+                            affiliation_to == "SAINT THOMAS ASCENSION" ~ "#1c429797",
+                            affiliation_to == "LIFEPOINT" ~ "#5f606297",
+                            affiliation_to == "CHS" ~ "#006c6797"),
+         r_to = case_when(affiliation_to == "VANDERBILT" ~ 154,
+                          affiliation_to == "HCA" ~ 226,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 28,
+                          affiliation_to == "LIFEPOINT" ~ 95,
+                          affiliation_to == "CHS" ~ 0),
+         g_to = case_when(affiliation_to == "VANDERBILT" ~ 120,
+                          affiliation_to == "HCA" ~ 89,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 66,
+                          affiliation_to == "LIFEPOINT" ~ 96,
+                          affiliation_to == "CHS" ~ 108),
+         b_to = case_when(affiliation_to == "VANDERBILT" ~ 61,
+                          affiliation_to == "HCA" ~ 41,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 151,
+                          affiliation_to == "LIFEPOINT" ~ 98,
+                          affiliation_to == "CHS" ~ 103)) %>%
+  group_by(lat_from, lng_from, hex_to, r_to, g_to, b_to, affiliation_to) %>%
+  summarize(patient_count = sum(patient_count), .groups = "drop") %>%
+  write_csv("../data/referrals_from_family_medicine.csv")
+```
+
+```{r}
+legend <- legend_element(
+  variables = c("Vanderbilt", "HCA", "Ascension Saint Thomas", "Lifepoint", "CHS"),
+  colours = c("#9a783d97", "#e2592997", "#1c429797", "#5f606297", "#006c6797"),
+  colour_type = "fill",
+  variable_type = "category"
+)
+
+mapdeck(style = mapdeck_style("light"), pitch = 60, bearing = 16) %>%
+  add_column(
+    data = family_medicine,
+    lat = "lat_from",
+    lon = "lng_from",
+    fill_colour = "hex_to",
+    elevation = "patient_count",
+    elevation_scale = 2,
+    disk_resolution = 300,
+    radius = 550,
+    legend = mapdeck_legend(legend)
+  )
+```
+
+```{r}
+hospitals <- hop_teaming_provider_to_facility %>% 
+  filter(affiliation_to %in% c("VANDERBILT", "HCA", "SAINT THOMAS ASCENSION", "LIFEPOINT", "CHS")) %>%
+  mutate(hex_to = case_when(affiliation_to == "VANDERBILT" ~ "#9a783d97",
+                            affiliation_to == "HCA" ~ "#e2592997",
+                            affiliation_to == "SAINT THOMAS ASCENSION" ~ "#1c429797",
+                            affiliation_to == "LIFEPOINT" ~ "#5f606297",
+                            affiliation_to == "CHS" ~ "#006c6797"),
+         r_to = case_when(affiliation_to == "VANDERBILT" ~ 154,
+                          affiliation_to == "HCA" ~ 226,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 28,
+                          affiliation_to == "LIFEPOINT" ~ 95,
+                          affiliation_to == "CHS" ~ 0),
+         g_to = case_when(affiliation_to == "VANDERBILT" ~ 120,
+                          affiliation_to == "HCA" ~ 89,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 66,
+                          affiliation_to == "LIFEPOINT" ~ 96,
+                          affiliation_to == "CHS" ~ 108),
+         b_to = case_when(affiliation_to == "VANDERBILT" ~ 61,
+                          affiliation_to == "HCA" ~ 41,
+                          affiliation_to == "SAINT THOMAS ASCENSION" ~ 151,
+                          affiliation_to == "LIFEPOINT" ~ 98,
+                          affiliation_to == "CHS" ~ 103)) %>%
+  group_by(lat_to, lng_to, hex_to, r_to, g_to, b_to, affiliation_to) %>%
+  summarize(patient_count = sum(patient_count), .groups = "drop") %>%
+  st_as_sf(coords = c("lat_to", "lng_to"), remove = F) %>%
+  write_csv("../data/referrals_to_hospitals.csv")
+```
+
+```{r}
+legend <- legend_element(
+  variables = c("Vanderbilt", "HCA", "Ascension Saint Thomas", "Lifepoint", "CHS"),
+  colours = c("#9a783d97", "#e2592997", "#1c429797", "#5f606297", "#006c6797"),
+  colour_type = "fill",
+  variable_type = "category"
+)
+
+mapdeck(style = mapdeck_style("light"), pitch = 60, bearing = 15) %>%
+  add_column(
+    data = hospital_referrals,
+    lat = "lat_to",
+    lon = "lng_to",
+    fill_colour = "hex_to",
+    elevation = "patient_count",
+    elevation_scale = 0.05,
+    disk_resolution = 300,
+    radius = 550,
+    legend = mapdeck_legend(legend)
+  )
+```
+
+```{r}
+plt1 <- hop_teaming_provider_to_facility %>%
+mutate(location_from = case_when(affiliation_from != "NOT IN NASHVILLE" ~ "inside_nashville",
+                                 affiliation_from == "NOT IN NASHVILLE" ~ "outside_nashville"),
+         .after = affiliation_from) %>%
+  group_by(location_from, classification_from) %>%
+  summarize(patient_count = sum(patient_count)) %>%
+  pivot_wider(names_from = location_from, values_from = patient_count, values_fill = 0) %>%
+  mutate(total = inside_nashville + outside_nashville,
+         outside_nashville_pct = outside_nashville / total) %>%
+  filter(total >= 10000) %>%
+  arrange(desc(outside_nashville_pct)) %>%
+  ggplot(aes(x = outside_nashville_pct, y = reorder(classification_from, outside_nashville_pct))) +
+  geom_bar(position = "stack", stat = "identity") +
+  labs(x = "Percentage of Patient Referrals from Providers Outside of Nashville", y = "") +
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
+  geom_text(aes(label = scales::comma(outside_nashville), color = ""), 
+            vjust = 0.5, 
+            hjust = 1.1,
+            size = 3,
+            show.legend = F) +
+  scale_colour_manual(values = c("#FFFFFF")) +
+  theme_minimal()
+
+ggsave(file = "../output/patient_referrals_from_specialty.png", plot = plt1, width = 10, height = 6, dpi = 600)
+```
+
+```{r}
+plt2 <- hop_teaming_facility_to_provider %>%
+mutate(location_from = case_when(affiliation_from != "NOT IN NASHVILLE" ~ "inside_nashville",
+                                 affiliation_from == "NOT IN NASHVILLE" ~ "outside_nashville"),
+         .after = affiliation_from) %>%
+  group_by(location_from, classification_to) %>%
+  summarize(patient_count = sum(patient_count)) %>%
+  pivot_wider(names_from = location_from, values_from = patient_count, values_fill = 0) %>%
+  mutate(total = inside_nashville + outside_nashville,
+         outside_nashville_pct = outside_nashville / total) %>%
+  filter(total >= 10000) %>%
+  arrange(desc(outside_nashville_pct)) %>%
+  ggplot(aes(x = outside_nashville_pct, y = reorder(classification_to, outside_nashville_pct))) +
+  geom_bar(position = "stack", stat = "identity") +
+  labs(x = "Percentage of Patient Referrals from Facilities Outside of Nashville", y = "") +
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
+  geom_text(aes(label = scales::comma(outside_nashville), color = ""), 
+            vjust = 0.5, 
+            hjust = 1.1,
+            size = 3,
+            show.legend = F) +
+  scale_colour_manual(values = c("#FFFFFF")) +
+  theme_minimal()
+
+ggsave(file = "patient_referrals_to_specialty.png", plot = plt2, width = 10, height = 6, dpi = 600)
+```
+
+```{r}
+plt3 <- hop_teaming_facility_to_provider %>%
+  filter(classification_to == "Internal Medicine") %>%
+  mutate(location_from = case_when(affiliation_from != "NOT IN NASHVILLE" ~ "inside_nashville",
+                                   affiliation_from == "NOT IN NASHVILLE" ~ "outside_nashville"),
+         .after = affiliation_from) %>%
+  group_by(location_from, specialization_to) %>%
+  summarize(patient_count = sum(patient_count)) %>%
+  pivot_wider(names_from = location_from, values_from = patient_count, values_fill = 0) %>%
+  mutate(total = inside_nashville + outside_nashville,
+         outside_nashville_pct = outside_nashville / total) %>%
+  filter(total >= 2000, !is.na(specialization_to)) %>%
+  arrange(desc(outside_nashville_pct)) %>%
+  ggplot(aes(x = outside_nashville_pct, y = reorder(specialization_to, outside_nashville_pct))) +
+  geom_bar(position = "stack", stat = "identity") +
+  labs(x = "Percentage of Patient Referrals from Facilities Outside of Nashville", y = "") +
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
+  geom_text(aes(label = scales::comma(outside_nashville), color = ""), 
+            vjust = 0.5, 
+            hjust = 1.1,
+            size = 3,
+            show.legend = F) +
+  scale_colour_manual(values = c("#FFFFFF")) +
+  theme_minimal()
+
+ggsave(file = "patient_referrals_to_internal_medicine_subspecialty.png", plot = plt3, width = 10, height = 6, dpi = 600)
+```
